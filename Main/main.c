@@ -30,6 +30,14 @@ void clearScreen(void) {
 #endif  
 }
 
+// เอาแค่ชื่อไฟล์จาก path
+static const char* csvBasename(void) {
+    const char *p1 = strrchr(csv, '\\');  // Windows
+    const char *p2 = strrchr(csv, '/');   // macOS/Linux
+    const char *p  = (p1 && p2) ? (p1 > p2 ? p1 : p2) : (p1 ? p1 : p2);
+    return p ? p + 1 : csv;
+}
+
 // แสดงข้อมูล
 void listData(){
     printf("List Data function called.\n");
@@ -51,6 +59,7 @@ void editData(){
 
 int menu() {
     int choice;
+    printf("Current CSV: %s\n", csvBasename());
     printf("\n===== Menu =====\n");
     printf("1. Add Data\n");
     printf("2. List\n");
@@ -59,6 +68,12 @@ int menu() {
     printf("=====================\n");
     printf("Choice (1-4): ");
     scanf("%d", &choice);
+    if (choice < 1 || choice > 4) {
+        printf("Invalid choice. Please select a number between 1 and 4.\n");
+        printf("Press Enter to continue...");
+        while (getchar() != '\n'); // Clear input buffer
+        getchar(); // Wait for Enter key
+    }
     return choice;
 }
 
