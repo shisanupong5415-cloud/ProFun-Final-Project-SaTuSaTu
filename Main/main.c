@@ -13,7 +13,7 @@
 
 
 // ประกาศตัวแปร
-char csv[csv_MAX] = "";
+char csv[csv_MAX] = "data.csv";
 char EmployeeName[name_MAX];
 char Position[position_MAX];
 char BonusAmount[bonus_MAX];
