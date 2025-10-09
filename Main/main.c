@@ -408,6 +408,270 @@ void listData(void) { // ================= Main List Function =================
 
 /* ============================================================ Everything About List Function ============================================================*/
 
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+
+//=========================================================== Everything About Search Function ============================================================
+/* เทียบสตริงแบบไม่สนพิมพ์เล็ก/ใหญ่ (ASCII) */
+static int equals_ci(const char *a, const char *b) {
+    unsigned char ca, cb;
+    while (*a && *b) {
+        ca = (unsigned char)*a++;
+        cb = (unsigned char)*b++;
+        if (tolower(ca) != tolower(cb)) return 0;
+    }
+    return *a == '\0' && *b == '\0';
+}
+
+/* อ่าน 1 บรรทัด + อนุญาตพิมพ์ 'menu' เพื่อยกเลิกและกลับเมนู */
+static int prompt_line_checked_or_menu(const char *label,
+                                       char *dst, size_t cap,
+                                       int (*validator)(const char*),
+                                       const char *errmsg) {
+    for (;;) {
+        int longline = 0;
+        printf("%s (type 'menu' to cancel): ", label);
+        if (!fgets(dst, (int)cap, stdin)) { clearerr(stdin); continue; }
+
+        if (strchr(dst, '\n') == NULL) { int c; while ((c=getchar())!='\n' && c!=EOF) {} longline = 1; }
+        trim_eol(dst);
+
+        if (strcmp(dst, "menu") == 0 || strcmp(dst, "MENU") == 0) return 0; /* ยกเลิก */
+        if (is_blank(dst))        { puts("  (ห้ามเว้นว่าง)"); continue; }
+        if (strchr(dst, ','))     { puts("  (ห้ามมีเครื่องหมายจุลภาค , )"); continue; }
+        if (!validator(dst))      { puts(errmsg); continue; }
+        if (longline) puts("  (คำเตือน: ข้อความยาวเกิน ถูกตัดให้พอดีกับช่อง)");
+        return 1;
+    }
+}
+
+/* ฟังก์ชันตรวจ ID 4 หลัก เพื่อส่งเป็นพอยน์เตอร์ */
+static int validator_id_4digits(const char *s) { return val_digits_len(s, 4); }
+
+/* ถาม keyword ตามคอลัมน์ที่เลือก */
+static int prompt_search_value(int col, char *dst, size_t cap) {
+    switch (col) {
+        case 1: /* ID */
+            return prompt_line_checked_or_menu("Search by ID (4 digits)",
+                                               dst, cap, validator_id_4digits,
+                                               "  (ต้องเป็นตัวเลข 4 หลัก)");
+        case 2: /* EmployeeName */
+            return prompt_line_checked_or_menu("Search by EmployeeName (A-Za-z & space)",
+                                               dst, cap, val_alpha_space_ascii,
+                                               "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+        case 3: /* Position */
+            return prompt_line_checked_or_menu("Search by Position (A-Za-z & space)",
+                                               dst, cap, val_alpha_space_ascii,
+                                               "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+        case 4: /* BonusAmount */
+            return prompt_line_checked_or_menu("Search by BonusAmount (digits)",
+                                               dst, cap, val_digits_only,
+                                               "  (ใส่ได้เฉพาะตัวเลข)");
+        case 5: /* PaymentDate */
+            return prompt_line_checked_or_menu("Search by PaymentDate (YYYY-MM-DD)",
+                                               dst, cap, val_digits_or_dash,
+                                               "  (ใส่ได้เฉพาะตัวเลขและเครื่องหมาย - เช่น 2025-10-09)");
+        case 6: /* RecordID */
+            return prompt_line_checked_or_menu("Search by RecordID (digits)",
+                                               dst, cap, val_digits_only,
+                                               "  (ใส่ได้เฉพาะตัวเลข)");
+        default:
+            return 0;
+    }
+}
+
+void searchData(void){
+    clearScreen();
+    listData();
+
+    int choice = -1;
+    for (;;) {
+        char buf[64];
+
+        // เมนูย่อยสำหรับ Search
+        puts("\nSearch by:");
+        puts("  1) ID");
+        puts("  2) EmployeeName");
+        puts("  3) Position");
+        puts("  4) BonusAmount");
+        puts("  5) PaymentDate");
+        puts("  6) RecordID");
+        puts("  0) Back to Menu");
+        printf("Your choice (0-6): ");
+
+        // อ่านอินพุตทั้งบรรทัดด้วย fgets (ทนต่อการพิมพ์ Enter เปล่าหรือมีช่องว่าง)
+        if (!fgets(buf, sizeof buf, stdin)) { 
+            clearerr(stdin);  // ล้างสถานะผิดพลาดของ stdin (เช่น EOF ชั่วคราว)
+            continue; 
+        }
+        trim_eol(buf);        // ตัด '\r' '\n' ทิ้ง
+
+        // ข้ามช่องว่างหัวสตริง
+        char *p = buf; 
+        while (*p==' '||*p=='\t') p++;
+
+        // ถ้าผู้ใช้กด Enter เปล่า ๆ → แจ้งเตือนแล้ววนถามใหม่
+        if (*p=='\0') { 
+            puts("Invalid input. Please type your choice (0-6)."); 
+            continue; 
+        }
+
+        // แปลงเป็นตัวเลขด้วย strtol (ปลอดภัยกว่า scanf)
+        // และเช็คว่าหลังตัวเลขไม่มีขยะตามมา (เช่น '2abc')
+        char *end = NULL;
+        long v = strtol(p, &end, 10);
+        while (*end==' '||*end=='\t') end++;   // อนุญาตช่องว่างท้าย
+        if (*end!='\0' || v < 0 || v > 6) {    // นอกช่วงหรือมีอักขระปน
+            puts("Invalid input. Please type your choice (0-6).");
+            continue;
+        }
+
+        choice = (int)v;
+        break; // อินพุตถูกต้อง ออกจากลูป
+    }
+
+    // 0 = กลับเมนูหลักโดยไม่ทำอะไรต่อ
+    if (choice == 0) return;
+
+    // และอนุญาตให้พิมพ์ "menu" เพื่อยกเลิกกลับเมนู
+    char key[256];
+    if (!prompt_search_value(choice, key, sizeof key)) {
+        puts("Search cancelled. Returning to menu...");
+        return; // ผู้ใช้ยกเลิก
+    }
+
+    FILE *f = fopen(csv, "r");
+    if (!f) {
+        printf("ไม่พบไฟล์: %s (หรือเปิดอ่านไม่ได้)\n", csv);
+        return;
+    }
+
+    // กำหนดความกว้างเริ่มต้นจากหัวคอลัมน์ (อย่างน้อย MIN)
+    int w[COLS];
+    for (int i = 0; i < COLS; ++i) {
+        int base = (int)strlen(COL_HEADER[i]);
+        w[i] = base < COL_MINW[i] ? COL_MINW[i] : base;
+    }
+
+    char line[4096];
+    int header_seen = 0;  // ธงไว้ข้ามบรรทัด header ในไฟล์ CSV
+    int matches = 0;      // นับจำนวนแถวที่แมตช์ (เพื่อรายงานผลตอนท้าย)
+
+    // ---------- Pass 1: วัดความกว้างจากแถวที่แมตช์ ----------
+    while (fgets(line, sizeof line, f)) {
+        trim_eol(line);
+        if (line[0] == '\0') continue; // ข้ามบรรทัดว่าง
+
+        // แยกฟิลด์ด้วย split_csv_simple (คาดหวัง 6 ช่องตามสคีมา)
+        char *fields[COLS] = {0};
+        int n = split_csv_simple(line, fields, COLS);
+        if (n < COLS) continue; // แถวไม่ครบช่อง ข้าม
+
+        // บรรทัดแรกเป็น header หรือไม่ (เทียบกับ COL_HEADER)
+        if (!header_seen && is_header_row(fields, n)) { 
+            header_seen = 1; 
+            continue; // ไม่เอา header ไปวัดความกว้าง
+        }
+
+        // เทียบว่าตรงเงื่อนไขกับ key หรือไม่
+        // * ชื่อ/ตำแหน่ง: เทียบแบบไม่สนพิมพ์เล็กใหญ่ (equals_ci)
+        // * ค่าตัวเลข/วันที่: เทียบตรง ๆ
+        int ok = 0;
+        switch (choice) {
+            case 1: ok = (strcmp(fields[COL_ID],   key)==0);  break;
+            case 2: ok = equals_ci(fields[COL_NAME], key);    break;
+            case 3: ok = equals_ci(fields[COL_POS],  key);    break;
+            case 4: ok = (strcmp(fields[COL_BONUS], key)==0); break;
+            case 5: ok = (strcmp(fields[COL_DATE],  key)==0); break;
+            case 6: ok = (strcmp(fields[COL_RID],   key)==0); break;
+        }
+        if (!ok) continue;
+
+        // ปรับความกว้างแต่ละคอลัมน์ตามข้อมูล (ไม่เกิน COL_MAXW)
+        for (int i = 0; i < COLS; ++i) {
+            int len = (int)strlen(fields[i]);
+            if (len > COL_MAXW[i]) len = COL_MAXW[i];
+            if (len > w[i]) w[i] = len;
+        }
+        matches++;
+    }
+    // ตัดความกว้างไม่ให้เกิน MAX ตามที่กำหนด
+    for (int i = 0; i < COLS; ++i) if (w[i] > COL_MAXW[i]) w[i] = COL_MAXW[i];
+
+    // พิมพ์หัวตาราง แล้วทำ Pass 2 เพื่อพิมพ์เฉพาะแถวที่ตรงเงื่อนไขจริง
+    rewind(f); 
+    header_seen = 0;
+    clearScreen();
+    printf("\n=== SEARCH RESULT (%s) ===\n", csvBasename());
+    print_border(w);                  // +----+----+...
+    printf("|");
+    for (int i = 0; i < COLS; ++i) {  // แสดงหัวคอลัมน์
+        print_cell(COL_HEADER[i], w[i], 0);
+        printf("|");
+    }
+    putchar('\n');
+    print_border(w);
+
+    int printed = 0;
+    while (fgets(line, sizeof line, f)) {
+        trim_eol(line);
+        if (line[0] == '\0') continue;
+
+        char *fields[COLS] = {0};
+        int n = split_csv_simple(line, fields, COLS);
+        if (n < COLS) continue;
+
+        // ข้าม header
+        if (!header_seen && is_header_row(fields, n)) { 
+            header_seen = 1; 
+            continue; 
+        }
+
+        // เงื่อนไขเดียวกับ Pass 1
+        int ok = 0;
+        switch (choice) {
+            case 1: ok = (strcmp(fields[COL_ID],   key)==0);  break;
+            case 2: ok = equals_ci(fields[COL_NAME], key);    break;
+            case 3: ok = equals_ci(fields[COL_POS],  key);    break;
+            case 4: ok = (strcmp(fields[COL_BONUS], key)==0); break;
+            case 5: ok = (strcmp(fields[COL_DATE],  key)==0); break;
+            case 6: ok = (strcmp(fields[COL_RID],   key)==0); break;
+        }
+        if (!ok) continue;
+
+        // แสดงข้อมูล 1 แถว (จัดชิดซ้าย/ขวาให้เหมาะ)
+        printf("|");  print_cell(fields[COL_ID],   w[COL_ID],   1); // ID ชิดขวา
+        printf("|");  print_cell(fields[COL_NAME], w[COL_NAME], 0); // Name ชิดซ้าย
+        printf("|");  print_cell(fields[COL_POS],  w[COL_POS],  0); // Position ชิดซ้าย
+        printf("|");  print_cell(fields[COL_BONUS],w[COL_BONUS],1); // Bonus ชิดขวา
+        printf("|");  print_cell(fields[COL_DATE], w[COL_DATE], 0); // Date ชิดซ้าย
+        printf("|");  print_cell(fields[COL_RID],  w[COL_RID],  1); // RecordID ชิดขวา
+        printf("|\n");
+        printed++;
+    }
+    print_border(w);                  // เส้นปิดท้ายตาราง
+    printf("Matched rows: %d\n", printed);
+
+    fclose(f); // ปิดไฟล์
+}
+//=========================================================== Everything About Search Function ============================================================
+
+//                                                                           []                                                                          //
+//                                                                           []                                                                          // 
+//                                                                           []                                                                          //
+
+//-----
+
+
+
+
+
+
+
+
+
 // ออกโปรแกรม   
 void exitProgram(){
     printf("Exiting program.\n");
@@ -415,10 +679,6 @@ void exitProgram(){
 
 void editData(){
     printf("Edit Data function called.\n");
-}
-
-void searchData(){
-    printf("Search Data function called.\n");
 }
 
 void deleteData(){
