@@ -56,47 +56,158 @@ static const char* csvBasename(void) {
     return p ? p + 1 : csv;
 }
 
+/* ============================================================ Everything About List Function ============================================================*/
+enum { COL_ID, COL_NAME, COL_POS, COL_BONUS, COL_DATE, COL_RID, COLS };  // 6 คอลัมน์
 
-// แสดงข้อมูล
-void listData(void) {
+/* หัวคอลัมน์ตามสคีมาในไฟล์: ID,EmployeeName,Position,BonusAmount,PaymentDate,RecordID */
+static const char *COL_HEADER[COLS] = {
+    "ID", "EmployeeName", "Position", "BonusAmount", "PaymentDate", "RecordID"
+};
+
+/* กำหนดกว้างขั้นต่ำ/สูงสุดของแต่ละคอลัมน์ (เพื่อความสวยงาม) */
+static const int COL_MINW[COLS] = { 2, 12,  9, 10, 10,  7 };
+static const int COL_MAXW[COLS] = {10, 28, 18, 12, 12, 10 };
+
+/* แยกบรรทัด CSV แบบง่าย: แยกด้วย ',', ไม่รองรับค่าที่มีเครื่องหมายคำพูด */
+static int split_csv_simple(char *line, char *fields[], int max_fields) {
+    int n = 0;
+    char *p = line;
+    while (n < max_fields) {
+        fields[n] = p;
+        char *comma = strchr(p, ',');
+        if (!comma) { n++; break; }   // ฟิลด์สุดท้าย
+        *comma = '\0';
+        p = comma + 1;
+        n++;
+    }
+    return n;
+}
+
+/* แถวนี้คือ header ของไฟล์หรือไม่ (ตรงกับหัว 6 ช่อง) */
+static int is_header_row(char *f[], int n) {
+    if (n < COLS) return 0;
+    for (int i = 0; i < COLS; ++i) {
+        if (strcmp(f[i], COL_HEADER[i]) != 0) return 0;
+    }
+    return 1;
+}
+
+/* วาดเส้นขอบ: +-----+-------+... */
+static void print_border(const int w[]) {
+    putchar('+');
+    for (int i = 0; i < COLS; ++i) {
+        for (int k = 0; k < w[i] + 2; ++k) putchar('-');  // +2 = เว้นซ้าย/ขวา
+        putchar('+');
+    }
+    putchar('\n');
+}
+
+/* พิมพ์ 1 ช่อง: รองรับตัดข้อความเกินความกว้างด้วย "..." และชิดซ้าย/ขวา */
+static void print_cell(const char *s, int width, int right_align) {
+    int len = (int)strlen(s);
+    char buf[1024];
+    const char *out = s;
+
+    if (len > width) {
+        int keep = (width > 3) ? (width - 3) : width;
+        if (keep < 0) keep = 0;
+        snprintf(buf, sizeof buf, "%.*s%s", keep, s, (width >= 3 ? "..." : ""));
+        out = buf;
+    }
+    if (right_align) printf(" %*s ", width, out);  // ชิดขวา
+    else             printf(" %-*s ", width, out); // ชิดซ้าย
+}
+
+void listData(void) { // ========================================== Main List Function ========================================== //
     FILE *f = fopen(csv, "r");
     if (!f) {
         printf("ไม่พบไฟล์: %s (หรือเปิดอ่านไม่ได้)\n", csv);
         return;
     }
 
-    char line[2048];
-    int row = 0;
+    char line[4096];
 
-    printf("\n=== LIST: %s ===\n", csvBasename());
-
-    /* อ่านบรรทัดแรก (ถือเป็น header ถ้ามี) */
-    if (fgets(line, sizeof line, f)) {
-        trim_eol(line);
-        if (line[0] != '\0') {
-            printf("%s\n", line);
-            size_t len = strlen(line);              // ← คิดครั้งเดียว
-            for (size_t i = 0; i < len; ++i) putchar('-');
-            putchar('\n');
-        }
-    } else {
-        puts("(ไฟล์ว่าง)");
-        fclose(f);
-        return;
-}
-
-    /* พิมพ์ข้อมูลทีละบรรทัด พร้อมเลขลำดับแบบง่าย ๆ */
-    while (fgets(line, sizeof line, f)) {
-        trim_eol(line);
-        if (line[0] == '\0') continue;          /* ข้ามบรรทัดว่าง */
-        printf("%3d) %s\n", ++row, line);
+    /* เริ่มความกว้างจากหัวคอลัมน์ (ไม่น้อยกว่า MIN) */
+    int w[COLS];
+    for (int i = 0; i < COLS; ++i) {
+        int base = (int)strlen(COL_HEADER[i]);
+        w[i] = base < COL_MINW[i] ? COL_MINW[i] : base;
     }
 
-    if (row == 0) puts("(ไม่มีข้อมูลแถว)");
+    /* รอบที่ 1: วัดความกว้างเหมาะสมจากข้อมูลจริง (แต่ไม่เกิน MAX) */
+    int header_seen = 0;
+    while (fgets(line, sizeof line, f)) {
+        trim_eol(line);
+        if (line[0] == '\0') continue;
+
+        char *fields[COLS] = {0};
+        int n = split_csv_simple(line, fields, COLS);
+        if (n < COLS) continue;
+
+        if (!header_seen && is_header_row(fields, n)) {
+            header_seen = 1;      // ถ้าแถวแรกของไฟล์คือ header ให้ข้ามตอนวัด
+            continue;
+        }
+
+        for (int i = 0; i < COLS; ++i) {
+            int len = (int)strlen(fields[i]);
+            if (len > COL_MAXW[i]) len = COL_MAXW[i];
+            if (len > w[i]) w[i] = len;
+        }
+    }
+    for (int i = 0; i < COLS; ++i) if (w[i] > COL_MAXW[i]) w[i] = COL_MAXW[i];
+
+    /* พิมพ์หัวตาราง */
+    rewind(f);
+    header_seen = 0;
+
+    printf("\n=== LIST: %s ===\n", csvBasename());
+    print_border(w);
+    printf("|");
+    for (int i = 0; i < COLS; ++i) {
+        print_cell(COL_HEADER[i], w[i], 0);  // หัวคอลัมน์ชิดซ้าย
+        printf("|");
+    }
+    putchar('\n');
+    print_border(w);
+
+    /* รอบที่ 2: พิมพ์ข้อมูลทีละแถว */
+    int rows = 0;
+    while (fgets(line, sizeof line, f)) {
+        trim_eol(line);
+        if (line[0] == '\0') continue;
+
+        char *fields[COLS] = {0};
+        int n = split_csv_simple(line, fields, COLS);
+        if (n < COLS) continue;
+
+        if (!header_seen && is_header_row(fields, n)) {
+            header_seen = 1;      // ถ้าไฟล์มี header จริง ให้ข้ามไม่พิมพ์ซ้ำ
+            continue;
+        }
+
+        printf("|");
+        print_cell(fields[COL_ID],   w[COL_ID],   1); // ID ขวา
+        printf("|");
+        print_cell(fields[COL_NAME], w[COL_NAME], 0); // Name ซ้าย
+        printf("|");
+        print_cell(fields[COL_POS],  w[COL_POS],  0); // Position ซ้าย
+        printf("|");
+        print_cell(fields[COL_BONUS],w[COL_BONUS],1); // Bonus ขวา
+        printf("|");
+        print_cell(fields[COL_DATE], w[COL_DATE], 0); // Date ซ้าย
+        printf("|");
+        print_cell(fields[COL_RID],  w[COL_RID],  1); // RecordID ขวา
+        printf("|\n");
+        rows++;
+    }
+    print_border(w);
+    printf("Total rows: %d\n", rows);
 
     fclose(f);
 }
 
+/* ============================================================ Everything About List Function ============================================================*/
 
 // เพิ่มข้อมูล
 void addData(){
