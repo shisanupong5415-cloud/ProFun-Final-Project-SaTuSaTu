@@ -997,7 +997,7 @@ void unitTest(void){
     if (v==1) run_unit_test_list();
     if (v==2) run_unit_test_search();
     g_testMode = 0;
-
+    pressEnter();
     /* จบแล้วกลับเมนูหลักทันที */
     /* ไม่ต้อง pressEnter(); ไม่ต้องวนลูปซ้ำ */
     return;
@@ -1012,6 +1012,7 @@ void E2Etest(void){
     g_testMode = 0;
 
     puts("\n[E2E tests finished]");
+    pressEnter();
     /* ไม่ต้อง pressEnter(); เด้งกลับเมนูทันที */
     return;
 }
