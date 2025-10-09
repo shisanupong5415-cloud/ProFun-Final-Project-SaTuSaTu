@@ -974,33 +974,34 @@ int exitProgram(void){
 
 
 void unitTest(void){
-    clearScreen();
-    puts("=== Unit Tests ===");
-    puts("1) listData tests");
-    puts("2) searchData tests");
-    puts("0) Back to menu");
-    printf("Choice (0-2): ");
+    for (;;) {
+        clearScreen();
+        puts("=== Unit Tests ===");
+        puts("1) listData tests");
+        puts("2) searchData tests");
+        puts("0) Back to menu");
+        printf("Choice (0-2): ");
 
-    char buf[32];
-    if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); return; }
-    trim_eol(buf);
-    char *p = buf; while (*p==' '||*p=='\t') p++;
-    if (*p=='\0') return;
+        char buf[32];
+        if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); continue; }
+        trim_eol(buf);
+        char *p = buf; while (*p==' '||*p=='\t') p++;
+        if (*p=='\0') continue;
 
-    char *end=NULL; long v=strtol(p,&end,10);
-    while (*end==' '||*end=='\t') end++;
-    if (*end!='\0' || v<0 || v>2) return;
+        char *end=NULL; long v=strtol(p,&end,10);
+        while (*end==' '||*end=='\t') end++;
+        if (*end!='\0' || v<0 || v>2) continue;
 
-    if (v==0) return; /* กลับเมนูหลักทันที */
+        if (v==0) return; /* กลับเมนูหลัก */
 
-    g_testMode = 1;   /* ปิด clear/enter ระหว่างรันเทสต์ */
-    if (v==1) run_unit_test_list();
-    if (v==2) run_unit_test_search();
-    g_testMode = 0;
-    pressEnter();
-    /* จบแล้วกลับเมนูหลักทันที */
-    /* ไม่ต้อง pressEnter(); ไม่ต้องวนลูปซ้ำ */
-    return;
+        g_testMode = 1;   /* ปิด clear/enter ระหว่างรันเทสต์ */
+        if (v==1) run_unit_test_list();
+        if (v==2) run_unit_test_search();
+        g_testMode = 0;
+
+        puts("\n[Unit tests finished]");
+        pressEnter();     /* โหมดปกติจะหยุดรอ, โหมดเทสต์ = no-op */
+    }
 }
 
 void E2Etest(void){
