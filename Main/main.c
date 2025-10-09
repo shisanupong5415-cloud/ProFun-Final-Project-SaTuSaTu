@@ -417,6 +417,22 @@ void editData(){
     printf("Edit Data function called.\n");
 }
 
+void searchData(){
+    printf("Search Data function called.\n");
+}
+
+void deleteData(){
+    printf("Delete Data function called.\n");
+}
+
+void unitTest(){
+    printf("Unit Test function called.\n");
+}
+
+void E2Etest(){
+    printf("E2E Test function called.\n");
+}
+
 // menu
 int menu(void) {
     for (;;) { //ลูปจนกว่าจะได้ค่าเมนูที่ถูกต้อง
@@ -427,9 +443,13 @@ int menu(void) {
         printf("1. Add Data\n");
         printf("2. List\n");
         printf("3. Edit\n");
-        printf("4. Exit\n");
+        printf("4. Search\n");
+        printf("5. Delete\n");
+        printf("6. Unit Test\n");
+        printf("7. E2E Test\n");
+        printf("8. Exit\n");
         printf("=====================\n");
-        printf("Choice (1-4): ");
+        printf("Choice (1-8): ");
 
         /* อ่านทั้งบรรทัด (รองรับ Enter เปล่า ๆ และมีช่องว่าง) */
         if (!fgets(buf, sizeof buf, stdin)) {
@@ -444,7 +464,7 @@ int menu(void) {
         char *p = buf;
         while (*p == ' ' || *p == '\t') p++;
         if (*p == '\0') {
-            puts("Please enter a number between 1 and 4.");
+            puts("Please enter a number between 1 and 8.");
             getchar();               // รอ Enter
             clearScreen();
             continue;                  /* ← กด Enter เปล่า ๆ จะมาที่นี่ */
@@ -455,14 +475,14 @@ int menu(void) {
         long v = strtol(p, &end, 10);
         while (*end == ' ' || *end == '\t') end++;  /* อนุญาตช่องว่างท้าย */
         if (*end != '\0') {
-            puts("Invalid input: numbers only (1-4).");
+            puts("Invalid input: numbers only (1-8).");
             getchar();               // รอ Enter
             clearScreen();
             continue;                  /* มีอักษรอื่นปน */
         }
 
-        if (v < 1 || v > 4) {
-            puts("Choice out of range (1-4).");
+        if (v < 1 || v > 8) {
+            puts("Choice out of range (1-8).");
             getchar();               // รอ Enter
             clearScreen();
             continue;                  /* นอกช่วง */
@@ -483,6 +503,7 @@ int main() {
 
         switch (choice) {
             case 1:
+                clearScreen();
                 addData();
                 pressEnter();         // พักก่อนลูปใหม่
                 break;
@@ -496,8 +517,26 @@ int main() {
                 pressEnter();
                 break;
             case 4:
-                exitProgram();
+                searchData();
+                pressEnter();
+                break;
+            case 5:
+                deleteData();
+                pressEnter();
+                break;
+            case 6:
+                unitTest();
+                pressEnter();
+                break;
+            case 7:
+                E2Etest();
+                pressEnter();
+                break;
+            case 8:
+                exitProgram(); 
+                pressEnter();
                 return 0;
+            
             default:
                 printf("Wrong Menu \n");
                 pressEnter();
