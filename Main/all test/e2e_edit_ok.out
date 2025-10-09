@@ -1,0 +1,91 @@
+
+=== LIST: e2e.csv ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+Total rows: 2
+
+=== LIST: e2e.csv ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+Total rows: 2
+
+Search by:
+  1) ID
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) RecordID
+  0) Back to Menu
+Your choice (0-6): Invalid input. Please type your choice (0-6).
+
+Search by:
+  1) ID
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) RecordID
+  0) Back to Menu
+Your choice (0-6): Search by RecordID (digits) (type 'menu' to cancel): 
+=== SEARCH RESULT (e2e.csv) ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+Matched rows: 1
+Enter RecordID to edit (type 'menu' to cancel):   (ห้ามเว้นว่าง)
+Enter RecordID to edit (type 'menu' to cancel): Current row (original):
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+
+Pending changes (will be saved):
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+
+Edit which field?
+  1) Employee ID (4 digits)
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) Confirm & Save
+  0) Cancel (discard changes)
+Your choice (0-6): Position                 : Current row (original):
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+
+Pending changes (will be saved):
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0002 | Bob          | QA        |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+
+Edit which field?
+  1) Employee ID (4 digits)
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) Confirm & Save
+  0) Cancel (discard changes)
+Your choice (0-6): Saved successfully.

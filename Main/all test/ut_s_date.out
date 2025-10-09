@@ -1,0 +1,29 @@
+
+=== LIST: ut_s_date.csv ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |       11 |
+| 0002 | Bob          | Dev       |        2000 | 2025-02-03  |       12 |
+| 0003 | Carol        | HR        |        3000 | 2025-03-04  |       13 |
+| 0004 | dAvE         | qa        |        4000 | 2025-04-05  |       14 |
++------+--------------+-----------+-------------+-------------+----------+
+Total rows: 4
+
+Search by:
+  1) ID
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) RecordID
+  0) Back to Menu
+Your choice (0-6): Search by PaymentDate (YYYY-MM-DD) (type 'menu' to cancel):   (only digits and '-' allowed, e.g., 2025-10-09)
+Search by PaymentDate (YYYY-MM-DD) (type 'menu' to cancel): 
+=== SEARCH RESULT (ut_s_date.csv) ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |       11 |
++------+--------------+-----------+-------------+-------------+----------+
+Matched rows: 1
