@@ -1,6 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+/* fd backup/restore (cross-platform) */
+#if defined(_WIN32)
+  #include <io.h>
+  #define MY_DUP     _dup
+  #define MY_DUP2    _dup2
+  #define MY_CLOSE   _close
+  #define MY_FILENO  _fileno
+#else
+  #include <unistd.h>
+  #define MY_DUP     dup
+  #define MY_DUP2    dup2
+  #define MY_CLOSE   close
+  #define MY_FILENO  fileno
+#endif
+
 #include "tests.h"
 
 /* ====== อ้างอิงของโปรแกรมหลัก ====== */
@@ -10,13 +26,7 @@ extern void editData(void);
 extern void deleteData(void);
 extern char csv[260];
 
-/* ====== helper ====== */
-#ifdef _WIN32
-  #define TTY_PATH "CON"
-#else
-  #define TTY_PATH "/dev/tty"
-#endif
-
+/* ====== helper (no TTY needed; use FD backup/restore) ====== */
 static void write_text(const char *path, const char *text){
     FILE *f = fopen(path, "w");
     if (!f) { perror("write_text"); exit(1); }
@@ -40,8 +50,16 @@ static int file_contains(const char *path, const char *needle){
 }
 static void set_csv(const char *path){ snprintf(csv, 260, "%s", path); }
 
+/* ====== STDIN/STDOUT redirection with FD backup ====== */
+static int saved_stdin_fd  = -1;
+static int saved_stdout_fd = -1;
+
 static void begin_capture_stdout(const char *outpath){
     fflush(stdout);
+    if (saved_stdout_fd == -1) {
+        saved_stdout_fd = MY_DUP(MY_FILENO(stdout));
+        if (saved_stdout_fd == -1) { perror("dup stdout"); exit(1); }
+    }
     if (!freopen(outpath, "w", stdout)) {
         perror("freopen stdout");
         exit(1);
@@ -49,16 +67,34 @@ static void begin_capture_stdout(const char *outpath){
 }
 static void end_capture_stdout(void){
     fflush(stdout);
-    freopen(TTY_PATH, "w", stdout);
+    if (saved_stdout_fd != -1) {
+        if (MY_DUP2(saved_stdout_fd, MY_FILENO(stdout)) == -1) {
+            perror("dup2 stdout");
+            exit(1);
+        }
+        MY_CLOSE(saved_stdout_fd);
+        saved_stdout_fd = -1;
+    }
 }
 static void begin_feed_stdin(const char *inpath){
+    if (saved_stdin_fd == -1) {
+        saved_stdin_fd = MY_DUP(MY_FILENO(stdin));
+        if (saved_stdin_fd == -1) { perror("dup stdin"); exit(1); }
+    }
     if (!freopen(inpath, "r", stdin)) {
         perror("freopen stdin");
         exit(1);
     }
 }
 static void end_feed_stdin(void){
-    freopen(TTY_PATH, "r", stdin);
+    if (saved_stdin_fd != -1) {
+        if (MY_DUP2(saved_stdin_fd, MY_FILENO(stdin)) == -1) {
+            perror("dup2 stdin");
+            exit(1);
+        }
+        MY_CLOSE(saved_stdin_fd);
+        saved_stdin_fd = -1;
+    }
 }
 
 /* ตัวช่วย list แล้วจับผล */

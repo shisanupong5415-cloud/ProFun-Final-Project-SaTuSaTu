@@ -4,6 +4,10 @@
 #include <ctype.h>
 #include "tests.h"
 
+/* ===== prototypes from tests ===== */
+void run_unit_test_list(void);
+void run_unit_test_search(void);
+void run_e2e_tests(void);
 
 // กำหนดค่าสูงสุดค่าตัวแปรที่รับเข้ามา
 #define csv_MAX 260
@@ -22,13 +26,19 @@ char BonusAmount[bonus_MAX];
 char PaymentDate[date_MAX];
 char ID[id_MAX];
 
+/* test mode: 0=ปกติ, 1=ระหว่างวิ่ง unit/E2E (ไม่ clear screen/ไม่รอ Enter) */
+static int g_testMode = 0;
+
+/* เพิ่มฟังก์ชันควบคุมโหมดเทสต์ */
+void set_test_mode(int on) { g_testMode = on ? 1 : 0; }
 
 // เคลียข้อความหน้าจอ
 void clearScreen(void) {
+    if (g_testMode) return;   /* โหมดเทสต์: ไม่ต้องเคลียร์จอ */
 #ifdef _WIN32
-    system("cls");     // Windows
+    system("cls");
 #else
-    system("clear");   // Unix/Linux/Mac
+    system("clear");
 #endif  
 }
 
@@ -43,10 +53,10 @@ void flushLine(void) {
 }
 
 /* พักหน้าจอ: ให้ผู้ใช้กด Enter เพื่อไปต่อ [Def] */
-void pressEnter(void) {
-    printf("\nPress Enter to continue...");
-    fflush(stdout);
+void pressEnter(void){
+    if (g_testMode) return;        /* โหมดเทสต์: ไม่ต้องรอ */
     int c;
+    printf("Press Enter to continue.");
     while ((c = getchar()) != '\n' && c != EOF) {}
 }
 
@@ -963,44 +973,47 @@ int exitProgram(void){
 //=========================================================== Everything About Exit Function ============================================================
 
 
-void unitTest(){
-    for (;;) {
-        char buf[32];
-        int choice = -1;
+void unitTest(void){
+    clearScreen();
+    puts("=== Unit Tests ===");
+    puts("1) listData tests");
+    puts("2) searchData tests");
+    puts("0) Back to menu");
+    printf("Choice (0-2): ");
 
-        clearScreen();
-        puts("===== Unit Tests =====");
-        puts("1) listData");
-        puts("2) searchData");
-        puts("0) Back");
-        printf("Choice (0-2): ");
+    char buf[32];
+    if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); return; }
+    trim_eol(buf);
+    char *p = buf; while (*p==' '||*p=='\t') p++;
+    if (*p=='\0') return;
 
-        if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); continue; }
-        trim_eol(buf);
-        char *p = buf; while (*p==' '||*p=='\t') p++;
-        if (*p=='\0') { puts("Invalid input."); pressEnter(); continue; }
+    char *end=NULL; long v=strtol(p,&end,10);
+    while (*end==' '||*end=='\t') end++;
+    if (*end!='\0' || v<0 || v>2) return;
 
-        char *end=NULL; long v=strtol(p,&end,10);
-        while (*end==' '||*end=='\t') end++;
-        if (*end!='\0' || v<0 || v>2) { puts("Invalid input (0-2)."); pressEnter(); continue; }
+    if (v==0) return; /* กลับเมนูหลักทันที */
 
-        choice = (int)v;
-        if (choice == 0) return;
+    g_testMode = 1;   /* ปิด clear/enter ระหว่างรันเทสต์ */
+    if (v==1) run_unit_test_list();
+    if (v==2) run_unit_test_search();
+    g_testMode = 0;
 
-        clearScreen();
-        if (choice == 1) run_unit_test_list();
-        else             run_unit_test_search();
-
-        puts("\n(End of unit test)");
-        pressEnter();
-    }
+    /* จบแล้วกลับเมนูหลักทันที */
+    /* ไม่ต้อง pressEnter(); ไม่ต้องวนลูปซ้ำ */
+    return;
 }
 
-void E2Etest(){
+void E2Etest(void){
     clearScreen();
+    puts("=== E2E Tests ===");
+
+    g_testMode = 1;
     run_e2e_tests();
-    puts("\n(End of E2E test)");
-    pressEnter();
+    g_testMode = 0;
+
+    puts("\n[E2E tests finished]");
+    /* ไม่ต้อง pressEnter(); เด้งกลับเมนูทันที */
+    return;
 }
 
 // menu
@@ -1096,11 +1109,9 @@ int main() {
                 break;
             case 6:
                 unitTest();
-                pressEnter();
                 break;
             case 7:
                 E2Etest();
-                pressEnter();
                 break;
             case 8: {
                 if (exitProgram()) {
