@@ -1,0 +1,44 @@
+
+=== LIST: e2e.csv ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
+| 0002 | Bob          | QA        |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+Total rows: 2
+
+Press Enter to continue...
+=== LIST: e2e.csv ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
+| 0002 | Bob          | QA        |        2000 | 2025-02-03  |      102 |
++------+--------------+-----------+-------------+-------------+----------+
+Total rows: 2
+
+Search by:
+  1) ID
+  2) EmployeeName
+  3) Position
+  4) BonusAmount
+  5) PaymentDate
+  6) RecordID
+  0) Back to Menu
+Your choice (0-6): Search by RecordID (digits) (type 'menu' to cancel): 
+=== SEARCH RESULT (e2e.csv) ===
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
++------+--------------+-----------+-------------+-------------+----------+
+Matched rows: 1
+
+Press Enter to continue...Enter RecordID to delete (type 'menu' to cancel): You are about to delete this row:
++------+--------------+-----------+-------------+-------------+----------+
+| ID   | EmployeeName | Position  | BonusAmount | PaymentDate | RecordID |
++------+--------------+-----------+-------------+-------------+----------+
+| 0001 | Alice        | HR        |        1000 | 2025-01-02  |      101 |
++------+--------------+-----------+-------------+-------------+----------+
+Confirm delete? (y/N): Deletion cancelled.

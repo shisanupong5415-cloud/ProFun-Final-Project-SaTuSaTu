@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "tests.h"
 
 
 // กำหนดค่าสูงสุดค่าตัวแปรที่รับเข้ามา
@@ -170,10 +171,10 @@ static void prompt_line_checked(const char *label,
         }
         trim_eol(dst);
 
-        if (is_blank(dst))        { puts("  (ห้ามเว้นว่าง)"); continue; }
-        if (strchr(dst, ','))     { puts("  (ห้ามมีเครื่องหมายจุลภาค , )"); continue; }
+        if (is_blank(dst))        { puts("  (Blank is not allowed)"); continue; }
+        if (strchr(dst, ','))     { puts("  (Cant have , in the message)"); continue; }
         if (!validator(dst))      { puts(errmsg); continue; }
-        if (longline) puts("  (คำเตือน: ข้อความยาวเกิน ถูกตัดให้พอดีกับช่อง)");
+        if (longline) puts("  (Warning: input too long, truncated to fit)");
         break;
     }
 }
@@ -185,27 +186,27 @@ static void prompt_id_4digits(char *dst, size_t cap) {
         if (!fgets(dst, (int)cap, stdin)) { clearerr(stdin); continue; }
         if (strchr(dst, '\n') == NULL) { int c; while ((c=getchar())!='\n'&&c!=EOF){} }
         trim_eol(dst);
-        if (is_blank(dst))            { puts("  (ห้ามเว้นว่าง)"); continue; }
-        if (strchr(dst, ','))         { puts("  (ห้ามมี , )"); continue; }
-        if (!val_digits_len(dst, 4))  { puts("  (ต้องเป็นตัวเลข 4 หลัก)"); continue; }
+        if (is_blank(dst))            { puts("  (Blank is not allowed)"); continue; }
+        if (strchr(dst, ','))         { puts("  (Cant have , in the message)"); continue; }
+        if (!val_digits_len(dst, 4))  { puts("  (Have to be 4 digits)"); continue; }
         break;
     }
 }
 static void prompt_name_alpha(char *dst, size_t cap) {
     prompt_line_checked("Employee Name            : ", dst, cap,
-                        val_alpha_space_ascii, "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+                        val_alpha_space_ascii, "  (only A-Z, a-z and space allowed)");
 }
 static void prompt_position_alpha(char *dst, size_t cap) {
     prompt_line_checked("Position                 : ", dst, cap,
-                        val_alpha_space_ascii, "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+                        val_alpha_space_ascii, "  (only A-Z, a-z and space allowed)");
 }
 static void prompt_bonus_digits(char *dst, size_t cap) {
     prompt_line_checked("Bonus Amount (digits)    : ", dst, cap,
-                        val_digits_only, "  (ใส่ได้เฉพาะตัวเลข)");
+                        val_digits_only, "  (only digits allowed)");
 }
 static void prompt_date_digits_dash(char *dst, size_t cap) {
     prompt_line_checked("Payment Date (YYYY-MM-DD): ", dst, cap,
-                        val_digits_or_dash, "  (ใส่ได้เฉพาะตัวเลขและเครื่องหมาย - เช่น 2025-10-09)");
+                        val_digits_or_dash, "  (only digits and '-' allowed, e.g., 2025-10-09)");
 }
 
 // เพิ่มข้อมูล ================= Main Add Function =================
@@ -320,7 +321,7 @@ void print_cell(const char *s, int width, int right_align) {
 void listData(void) { // ================= Main List Function =================
     FILE *f = fopen(csv, "r");
     if (!f) {
-        printf("ไม่พบไฟล์: %s (หรือเปิดอ่านไม่ได้)\n", csv);
+        printf("No file found: %s (Or cant open file)\n", csv);
         return;
     }
 
@@ -442,7 +443,7 @@ static int prompt_line_checked_or_menu(const char *label,
         if (is_blank(dst))        { puts("  (ห้ามเว้นว่าง)"); continue; }
         if (strchr(dst, ','))     { puts("  (ห้ามมีเครื่องหมายจุลภาค , )"); continue; }
         if (!validator(dst))      { puts(errmsg); continue; }
-        if (longline) puts("  (คำเตือน: ข้อความยาวเกิน ถูกตัดให้พอดีกับช่อง)");
+        if (longline) puts("  (warning: input too long, truncated to fit)");
         return 1;
     }
 }
@@ -456,27 +457,27 @@ static int prompt_search_value(int col, char *dst, size_t cap) {
         case 1: /* ID */
             return prompt_line_checked_or_menu("Search by ID (4 digits)",
                                                dst, cap, validator_id_4digits,
-                                               "  (ต้องเป็นตัวเลข 4 หลัก)");
+                                               "  (Have to be 4 digits)");
         case 2: /* EmployeeName */
             return prompt_line_checked_or_menu("Search by EmployeeName (A-Za-z & space)",
                                                dst, cap, val_alpha_space_ascii,
-                                               "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+                                               "  (only A-Z, a-z and space allowed)");
         case 3: /* Position */
             return prompt_line_checked_or_menu("Search by Position (A-Za-z & space)",
                                                dst, cap, val_alpha_space_ascii,
-                                               "  (ใส่ได้เฉพาะตัวอักษรอังกฤษและเว้นวรรค)");
+                                               "  (only A-Z, a-z and space allowed)");
         case 4: /* BonusAmount */
             return prompt_line_checked_or_menu("Search by BonusAmount (digits)",
                                                dst, cap, val_digits_only,
-                                               "  (ใส่ได้เฉพาะตัวเลข)");
+                                               "  (only digits allowed)");
         case 5: /* PaymentDate */
             return prompt_line_checked_or_menu("Search by PaymentDate (YYYY-MM-DD)",
                                                dst, cap, val_digits_or_dash,
-                                               "  (ใส่ได้เฉพาะตัวเลขและเครื่องหมาย - เช่น 2025-10-09)");
+                                               "  (only digits and '-' allowed, e.g., 2025-10-09)");
         case 6: /* RecordID */
             return prompt_line_checked_or_menu("Search by RecordID (digits)",
                                                dst, cap, val_digits_only,
-                                               "  (ใส่ได้เฉพาะตัวเลข)");
+                                               "  (only digits allowed)");
         default:
             return 0;
     }
@@ -544,7 +545,7 @@ void searchData(void){
 
     FILE *f = fopen(csv, "r");
     if (!f) {
-        printf("ไม่พบไฟล์: %s (หรือเปิดอ่านไม่ได้)\n", csv);
+        printf("No file found: %s (Cant open file)\n", csv);
         return;
     }
 
@@ -662,35 +663,344 @@ void searchData(void){
 //                                                                           []                                                                          // 
 //                                                                           []                                                                          //
 
-//-----
+/* //=========================================================== CSV row model & helpers (ใช้ใน EDIT) //=========================================================== */
+typedef struct {
+    char id[id_MAX];
+    char name[name_MAX];
+    char pos[position_MAX];
+    char bonus[bonus_MAX];
+    char date[date_MAX];
+    char rid[32];
+} Row;
 
+/* โหลด CSV เป็นแถว ๆ (ข้าม header ถ้ามี) */
+static int load_rows(Row **out_rows, size_t *out_n, int *out_has_header) {
+    FILE *f = fopen(csv, "r");
+    if (!f) { perror("open csv for read"); return 0; }
 
+    Row *rows=NULL; size_t n=0, cap=0;
+    char line[4096]; int header_seen=0;
 
+    while (fgets(line, sizeof line, f)) {
+        trim_eol(line); if (line[0]=='\0') continue;
+        char *fields[COLS]={0}; int m=split_csv_simple(line, fields, COLS);
+        if (m<COLS) continue;
+        if (!header_seen && is_header_row(fields,m)) { header_seen=1; continue; }
 
+        if (n==cap){ size_t nc=cap?cap*2:64; Row *tmp=(Row*)realloc(rows, nc*sizeof*rows);
+            if(!tmp){fclose(f); free(rows); return 0;} rows=tmp; cap=nc; }
+        Row *r=&rows[n++];
+        snprintf(r->id,    sizeof r->id,    "%s", fields[COL_ID]);
+        snprintf(r->name,  sizeof r->name,  "%s", fields[COL_NAME]);
+        snprintf(r->pos,   sizeof r->pos,   "%s", fields[COL_POS]);
+        snprintf(r->bonus, sizeof r->bonus, "%s", fields[COL_BONUS]);
+        snprintf(r->date,  sizeof r->date,  "%s", fields[COL_DATE]);
+        snprintf(r->rid,   sizeof r->rid,   "%s", fields[COL_RID]);
+    }
+    fclose(f);
 
+    *out_rows = rows; *out_n = n; *out_has_header = header_seen;
+    return 1;
+}
 
+/* เซฟทั้งไฟล์กลับ (คง header ถ้าเดิมมี) */
+static int save_rows(const Row *rows, size_t n, int has_header) {
+    FILE *w = fopen(csv, "w");
+    if (!w) { perror("open csv for write"); return 0; }
 
+    if (has_header) {
+        fprintf(w, "%s,%s,%s,%s,%s,%s\n",
+            COL_HEADER[0], COL_HEADER[1], COL_HEADER[2],
+            COL_HEADER[3], COL_HEADER[4], COL_HEADER[5]);
+    }
+    for (size_t i=0;i<n;++i) {
+        fprintf(w, "%s,%s,%s,%s,%s,%s\n",
+            rows[i].id, rows[i].name, rows[i].pos,
+            rows[i].bonus, rows[i].date, rows[i].rid);
+    }
+    fclose(w);
+    return 1;
+}
 
+/* หา index ด้วย RecordID */
+static int find_index_by_rid(Row *rows, size_t n, const char *rid) {
+    for (size_t i=0;i<n;++i) if (strcmp(rows[i].rid, rid)==0) return (int)i;
+    return -1;
+}
 
+/* พรีวิว 1 แถวแบบตารางเล็ก ๆ */
+static void preview_row(const Row *r) {
+    int w[COLS];
+    for (int i=0;i<COLS;++i){ int base=(int)strlen(COL_HEADER[i]); w[i]= base<COL_MINW[i]?COL_MINW[i]:base; }
+    int len;
+    len=(int)strlen(r->id);    if(len>COL_MAXW[COL_ID])len=COL_MAXW[COL_ID];     if(len>w[COL_ID])  w[COL_ID]=len;
+    len=(int)strlen(r->name);  if(len>COL_MAXW[COL_NAME])len=COL_MAXW[COL_NAME]; if(len>w[COL_NAME])w[COL_NAME]=len;
+    len=(int)strlen(r->pos);   if(len>COL_MAXW[COL_POS])len=COL_MAXW[COL_POS];   if(len>w[COL_POS]) w[COL_POS]=len;
+    len=(int)strlen(r->bonus); if(len>COL_MAXW[COL_BONUS])len=COL_MAXW[COL_BONUS];if(len>w[COL_BONUS])w[COL_BONUS]=len;
+    len=(int)strlen(r->date);  if(len>COL_MAXW[COL_DATE])len=COL_MAXW[COL_DATE]; if(len>w[COL_DATE])w[COL_DATE]=len;
+    len=(int)strlen(r->rid);   if(len>COL_MAXW[COL_RID])len=COL_MAXW[COL_RID];   if(len>w[COL_RID]) w[COL_RID]=len;
+
+    print_border(w);
+    printf("|"); for (int i=0;i<COLS;++i){ print_cell(COL_HEADER[i],w[i],0); printf("|"); } putchar('\n');
+    print_border(w);
+
+    printf("|");  print_cell(r->id,    w[COL_ID],    1);
+    printf("|");  print_cell(r->name,  w[COL_NAME],  0);
+    printf("|");  print_cell(r->pos,   w[COL_POS],   0);
+    printf("|");  print_cell(r->bonus, w[COL_BONUS], 1);
+    printf("|");  print_cell(r->date,  w[COL_DATE],  0);
+    printf("|");  print_cell(r->rid,   w[COL_RID],   1);
+    printf("|\n");
+    print_border(w);
+}
+
+/* //=========================================================== CSV row model & helpers (ใช้ใน EDIT) //=========================================================== */
+
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+
+//=========================================================== Everything About Edit Functions ============================================================
+
+void editData(void){
+    /* 1) โชว์รายการ + ช่วยค้นหาให้ก่อน */
+    clearScreen();
+    listData();
+    pressEnter();           /* ให้ผู้ใช้ดู list จบก่อน */
+    clearScreen();
+    searchData();           /* narrowing ก่อนแก้ */
+    pressEnter();
+
+    /* 2) โหลดทั้งไฟล์เข้าเมมโมรี่ */
+    Row *rows=NULL; size_t n=0; int has_header=0;
+    if (!load_rows(&rows, &n, &has_header)) { puts("Cannot load CSV. Abort."); return; }
+    if (n==0) { puts("No data to edit."); free(rows); return; }
+
+    /* 3) รับ RecordID (พิมพ์ 'menu' เพื่อยกเลิกได้) */
+    char rid[64];
+    if (!prompt_line_checked_or_menu("Enter RecordID to edit", rid, sizeof rid,
+                                     val_digits_only, "  (only digits allowed)")) {
+        puts("Edit cancelled.");
+        free(rows);
+        return;
+    }
+    int idx = find_index_by_rid(rows, n, rid);
+    if (idx < 0) { printf("RecordID %s not found.\n", rid); free(rows); return; }
+
+    /* 4) ทำสำเนาชั่วคราวไว้แก้ */
+    Row original = rows[idx];
+    Row temp     = rows[idx];
+
+    for (;;) {
+        clearScreen();
+        puts("Current row (original):");
+        preview_row(&original);
+        puts("\nPending changes (will be saved):");
+        preview_row(&temp);
+
+        puts("\nEdit which field?");
+        puts("  1) Employee ID (4 digits)");
+        puts("  2) EmployeeName");
+        puts("  3) Position");
+        puts("  4) BonusAmount");
+        puts("  5) PaymentDate");
+        puts("  6) Confirm & Save");
+        puts("  0) Cancel (discard changes)");
+        printf("Your choice (0-6): ");
+
+        char buf[64];
+        if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); continue; }
+        trim_eol(buf);
+        char *p=buf; while(*p==' '||*p=='\t') p++;
+        if (*p=='\0') continue;
+
+        char *end=NULL; long v=strtol(p,&end,10);
+        while(*end==' '||*end=='\t') end++;
+        if (*end!='\0' || v<0 || v>6) continue;
+
+        if (v==0) { puts("Cancelled. No changes saved."); break; }
+        if (v==6) {
+            rows[idx] = temp;
+            if (!save_rows(rows, n, has_header)) puts("Error: cannot save CSV.");
+            else                                  puts("Saved successfully.");
+            break;
+        }
+
+        /* 5) ปรับค่าแต่ละฟิลด์ด้วยตัวตรวจเดิม (เหมือน addData) */
+        switch (v) {
+            case 1: prompt_id_4digits(temp.id, sizeof temp.id);                 break;
+            case 2: prompt_name_alpha(temp.name, sizeof temp.name);             break;
+            case 3: prompt_position_alpha(temp.pos, sizeof temp.pos);           break;
+            case 4: prompt_bonus_digits(temp.bonus, sizeof temp.bonus);         break;
+            case 5: prompt_date_digits_dash(temp.date, sizeof temp.date);       break;
+        }
+        /* ไม่ให้แก้ RecordID เพื่อรักษาความยูนีค */
+    }
+
+    free(rows);
+}
+
+//=========================================================== Everything About Edit Functions ============================================================
+
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+
+//=========================================================== Everything About Delete Function ============================================================
+
+void deleteData(void){
+    /* 0) โชว์รายการ & ช่วยค้นหาให้ผู้ใช้ก่อน */
+    clearScreen();
+    listData();
+    pressEnter();            /* ให้ผู้ใช้ไล่อ่านก่อน */
+    clearScreen();
+    searchData();            /* narrowing */
+    pressEnter();
+
+    /* 1) โหลดทั้งไฟล์มาไว้ในหน่วยความจำ */
+    Row *rows = NULL; 
+    size_t n = 0; 
+    int has_header = 0;
+    if (!load_rows(&rows, &n, &has_header)) {
+        puts("Cannot load CSV. Abort.");
+        return;
+    }
+    if (n == 0) {
+        puts("No data to delete.");
+        free(rows);
+        return;
+    }
+
+    /* 2) ให้ผู้ใช้กรอก RecordID ที่ต้องการลบ (พิมพ์ menu เพื่อยกเลิกได้) */
+    char rid[64];
+    if (!prompt_line_checked_or_menu("Enter RecordID to delete",
+                                     rid, sizeof rid,
+                                     val_digits_only,
+                                     "  (ใส่ได้เฉพาะตัวเลข)")) {
+        puts("Delete cancelled.");
+        free(rows);
+        return;
+    }
+
+    /* 3) หา index ของแถวนั้น */
+    int idx = find_index_by_rid(rows, n, rid);
+    if (idx < 0) {
+        printf("RecordID %s not found.\n", rid);
+        free(rows);
+        return;
+    }
+
+    /* 4) แสดงแถวที่จะลบให้พรีวิว แล้วถามยืนยัน */
+    clearScreen();
+    puts("You are about to delete this row:");
+    preview_row(&rows[idx]);
+
+    char ans[8];
+    printf("Confirm delete? (y/N): ");
+    if (!fgets(ans, sizeof ans, stdin)) { clearerr(stdin); free(rows); return; }
+    trim_eol(ans);
+    if (!(ans[0] == 'y' || ans[0] == 'Y')) {
+        puts("Deletion cancelled.");
+        free(rows);
+        return;
+    }
+
+    /* 5) ลบออกจากอาเรย์ในหน่วยความจำ (เลื่อนทับ) */
+    if ((size_t)idx < n - 1) {
+        memmove(&rows[idx], &rows[idx + 1], (n - 1 - idx) * sizeof(Row));
+    }
+    n--;
+
+    /* 6) เซฟกลับลงไฟล์ (คง header ถ้าไฟล์เดิมมี) */
+    if (!save_rows(rows, n, has_header)) {
+        puts("Error: cannot write CSV.");
+    } else {
+        puts("Row deleted.");
+    }
+
+    free(rows);
+}
+//=========================================================== Everything About Delete Function ============================================================
+
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+//                                                                           []                                                                          //
+
+//=========================================================== Everything About Exit Function ============================================================
 // ออกโปรแกรม   
-void exitProgram(){
-    printf("Exiting program.\n");
-}
+int exitProgram(void){
+    char buf[32];
 
-void editData(){
-    printf("Edit Data function called.\n");
-}
+    for (;;) {
+        printf("Are you sure you want to exit? (y/N): ");
+        if (!fgets(buf, sizeof buf, stdin)) {   // กันเคส stdin มีปัญหา
+            clearerr(stdin);
+            continue;
+        }
+        trim_eol(buf);
 
-void deleteData(){
-    printf("Delete Data function called.\n");
+        // แปลงเป็นตัวพิมพ์เล็กทั้งหมดเพื่อเทียบแบบไม่สนเคส
+        for (char *p = buf; *p; ++p) {
+            *p = (char)tolower((unsigned char)*p);
+        }
+
+        if (buf[0] == '\0') {                   // กด Enter เปล่า = ไม่ออก
+            puts("Canceled. Returning to menu.");
+            return 0;
+        }
+        if (!strcmp(buf, "y") || !strcmp(buf, "yes")) {
+            puts("Goodbye!");
+            return 1;                           // ยืนยันให้ออก
+        }
+        if (!strcmp(buf, "n") || !strcmp(buf, "no")) {
+            puts("Canceled. Returning to menu.");
+            return 0;                           // ไม่ออก
+        }
+
+        puts("Please type 'y' or 'n'.");
+    }
 }
+//=========================================================== Everything About Exit Function ============================================================
+
 
 void unitTest(){
-    printf("Unit Test function called.\n");
+    for (;;) {
+        char buf[32];
+        int choice = -1;
+
+        clearScreen();
+        puts("===== Unit Tests =====");
+        puts("1) listData");
+        puts("2) searchData");
+        puts("0) Back");
+        printf("Choice (0-2): ");
+
+        if (!fgets(buf, sizeof buf, stdin)) { clearerr(stdin); continue; }
+        trim_eol(buf);
+        char *p = buf; while (*p==' '||*p=='\t') p++;
+        if (*p=='\0') { puts("Invalid input."); pressEnter(); continue; }
+
+        char *end=NULL; long v=strtol(p,&end,10);
+        while (*end==' '||*end=='\t') end++;
+        if (*end!='\0' || v<0 || v>2) { puts("Invalid input (0-2)."); pressEnter(); continue; }
+
+        choice = (int)v;
+        if (choice == 0) return;
+
+        clearScreen();
+        if (choice == 1) run_unit_test_list();
+        else             run_unit_test_search();
+
+        puts("\n(End of unit test)");
+        pressEnter();
+    }
 }
 
 void E2Etest(){
-    printf("E2E Test function called.\n");
+    clearScreen();
+    run_e2e_tests();
+    puts("\n(End of E2E test)");
+    pressEnter();
 }
 
 // menu
@@ -792,11 +1102,13 @@ int main() {
                 E2Etest();
                 pressEnter();
                 break;
-            case 8:
-                exitProgram(); 
-                pressEnter();
-                return 0;
-            
+            case 8: {
+                if (exitProgram()) {
+                    return 0;        // ออกจริง
+                }
+                pressEnter();        // ถ้ายกเลิก ให้อยู่ต่อและพักหน้าจอ
+                break;
+            }
             default:
                 printf("Wrong Menu \n");
                 pressEnter();
